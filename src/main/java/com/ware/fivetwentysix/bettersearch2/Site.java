@@ -1,5 +1,14 @@
 package com.ware.fivetwentysix.bettersearch2;
 
+import opennlp.tools.formats.ad.ADSentenceStream;
+import opennlp.tools.sentdetect.SentenceDetector;
+import opennlp.tools.sentdetect.SentenceDetectorME;
+import opennlp.tools.sentdetect.SentenceModel;
+import opennlp.tools.util.ObjectStream;
+import opennlp.tools.util.PlainTextByLineStream;
+import opennlp.tools.util.Span;
+
+import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.regex.Pattern;
@@ -14,11 +23,26 @@ public class Site {
     private static final Pattern END_SENTENCE = Pattern.compile("\\p{Punct}");
     private static final Pattern END_SENTENCE2 = Pattern.compile("[.!?\\-]");
     private static final Pattern DONT_WANT = Pattern.compile("[^)/(]");
+    private InputStream modelIn = null;
+    private SentenceModel model = null;
+    private SentenceDetectorME sentenceDetectorME = null;
+    private boolean mUseNlp;
 
-    public Site(String url) {
+    public Site(String url, boolean useNlp) {
         this.url = url;
+        mUseNlp = useNlp;
+       if (mUseNlp){initializeNLPSentenceDetect();}
     }
 
+    private void initializeNLPSentenceDetect(){
+        try {
+            modelIn = new FileInputStream("en-sent.bin");
+        }catch(FileNotFoundException e){System.out.println("en-sent.bin not found");}
+        try {
+            model = new SentenceModel(modelIn);
+        } catch(IOException e){System.out.println("Ereror setting sentencemodel");}
+        sentenceDetectorME = new SentenceDetectorME(model);
+    }
     /**
      * get count of sentences on site
      * @return - count
@@ -53,11 +77,23 @@ public class Site {
      * @param text - site text blob
      */
     public void addSiteText(String text) {
-        processSentences(text);
+        if (!mUseNlp) {
+            processSentences(text);
+        }else {
+            processSentencesNLP(text);
+        }
 //        System.out.println("TEXT2 = " + text);
 //        dumpSentences();
     }
 
+    private void processSentencesNLP(String text){
+        String[] sentence = sentenceDetectorME.sentDetect(text);
+        for (String sent:sentence){
+            System.out.println("SENTENCE = "+sent);
+            siteTxt.add(sent);
+        }
+
+    }
     /**
      * break text into sentences and store
      * @param text - swap this for openNlp?
