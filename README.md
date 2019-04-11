@@ -12,3 +12,4 @@ Apply machine learning tools to improve:
   1. simple text file generated
   2. better identify top sites
   3. gain experience with OpenNLP and other tools
+    1. testOpenNlp.java explores tokenizer and tagger to create better summary information
