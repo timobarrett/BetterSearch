@@ -7,6 +7,7 @@ import opennlp.tools.sentdetect.SentenceModel;
 import opennlp.tools.util.ObjectStream;
 import opennlp.tools.util.PlainTextByLineStream;
 import opennlp.tools.util.Span;
+import org.apache.log4j.Logger;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -17,6 +18,7 @@ import java.util.regex.Pattern;
   object stores the text from a site
  */
 public class Site {
+    private static final Logger Log = Logger.getLogger( com.ware.fivetwentysix.bettersearch2.Site.class);
     private ArrayList<String> siteTxt = new ArrayList<>();
     private HashMap<String,Integer>sentenceCount = new HashMap<>();
     private String url;
@@ -35,6 +37,7 @@ public class Site {
     }
 
     private void initializeNLPSentenceDetect(){
+        Log.info("Site - initializeNLPSentenceDetect");
         try {
             modelIn = new FileInputStream("en-sent.bin");
         }catch(FileNotFoundException e){System.out.println("en-sent.bin not found");}
@@ -65,6 +68,7 @@ public class Site {
      * @return - count of occurances
      */
     public int getSearchWordCnt(String searchStr){
+     //   Log.info("Site - getSearchWordCnt");
 //        System.out.println("GetSearchWordCnt - URL = "+url + " SearchStr = "+searchStr);
         if (sentenceCount.containsKey(searchStr)) {
             return sentenceCount.get(searchStr);
@@ -77,6 +81,7 @@ public class Site {
      * @param text - site text blob
      */
     public void addSiteText(String text) {
+        Log.info("Site - addSiteText");
         if (!mUseNlp) {
             processSentences(text);
         }else {
@@ -87,10 +92,13 @@ public class Site {
     }
 
     private void processSentencesNLP(String text){
+        Log.info("Site - processSentenceNLP");
         String[] sentence = sentenceDetectorME.sentDetect(text);
         for (String sent:sentence){
-            System.out.println("SENTENCE = "+sent);
-            siteTxt.add(sent);
+//            System.out.println("SENTENCE = "+sent);
+            if (!sent.contains("?")) {
+                siteTxt.add(sent);
+            }
         }
 
     }
@@ -99,8 +107,11 @@ public class Site {
      * @param text - swap this for openNlp?
      */
     private void processSentences(String text){
+        Log.info("Site - processSentences");
         for (String sentence:END_SENTENCE2.split(text)) {
-            siteTxt.add(sentence);
+            if (!sentence.contains("?")) {
+                siteTxt.add(sentence);
+            }
         }
     }
 
@@ -110,6 +121,7 @@ public class Site {
      * @return - sentences containing search string
      */
     public ArrayList<String> foundStrings(String searchStr){
+//        Log.info("Site - foundStrings");
         ArrayList<String> results = new ArrayList<>();
         for (String sentence:siteTxt){
             if (sentence.toLowerCase().contains(searchStr.toLowerCase())){
@@ -120,7 +132,7 @@ public class Site {
             }
         }
         sentenceCount.put(searchStr,results.size());
-        removeReportedStrings(results);
+//        removeReportedStrings(results);
         return results;
     }
 
@@ -134,6 +146,9 @@ public class Site {
         }
     }
 
+    public ArrayList<String>getAllText(){
+        return siteTxt;
+    }
     /**
      * TODO - method to evaluate processing
      */
