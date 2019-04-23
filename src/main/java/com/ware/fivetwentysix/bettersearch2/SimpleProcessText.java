@@ -1,16 +1,18 @@
 package com.ware.fivetwentysix.bettersearch2;
 
 import opennlp.tools.stemmer.PorterStemmer;
+import org.apache.log4j.Logger;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class SimpleProcessText {
 
-//TODO - look for a sklearn like source for these values
+    private static final Logger Log = Logger.getLogger( com.ware.fivetwentysix.bettersearch2.SimpleProcessText.class);
+    //TODO - look for a sklearn like source for these values
     private String[] cwords = {"for", "the", "be", "as", "an", "you", "this", "i", "we", "of", "or", "me", "than", "that", "if", "is", "it", "in", "do", "also", "their", "when", "was", "too", "can", "are", "where", "until", "any", "and",
             "already", "always", "all", "choose", "therefore", "its", "from", "itself", "just", "some", "you", "their", "put", "has", "your", "we", "know", "to", "so", "that", "it", "is", "in", "if", "do", "by", "into", "her", "his",
-            "out", "most", "pm", "she", "he", "who", "what", "off", "even", "only", "no", "says", "am", "search", "one", "good", "other", "very", "see", "then", "first", "amazon",
+            "out", "most", "pm", "she", "he", "who", "what", "off", "even", "only", "no", "says", "am", "search", "one", "good", "other", "very", "see", "then", "first", "amazon","facebook","twitter","pinterest",
             "be", "will", "not", "they", "at", "on", "but", "may", "get", "our", "my", "up", "use", "like", "a", "have", "with", "more", "them", "how", "about", "help", "new", "which", "us", "kindle", "prime"};
     private HashSet<String> stopWords = new HashSet<String>(Arrays.asList(cwords));
 
@@ -29,10 +31,16 @@ public class SimpleProcessText {
      * @param words - search words
      */
     public void addCommonTerms(ArrayList<String> words) {
+        Log.info("SimpleProcessText - addCommonTerms");
         for (String word : words) {
             stopWords.add(word);
         }
     }
+
+    public boolean isStopWord(String word){
+        return stopWords.contains(word);
+    }
+
 
     /**
      * add urls searched to list
@@ -40,6 +48,7 @@ public class SimpleProcessText {
      * @return success or fail
      */
     public boolean addSearchUrls(String searchUrl) {
+        Log.info("SimpleProcessText - addSearchUrls");
         return mSearchURLs.add(searchUrl);
     }
 
@@ -48,15 +57,16 @@ public class SimpleProcessText {
      * @param text - text from website document
      */
     protected void mineTextForWords(String text) {
+        Log.info("SimpleProcessText - mineTextForWords");
         String[] words = text.toLowerCase().split(" ");
         for (String word : words) {
 //            String stemWord = mBaseStemmer.getStem(word);
             String stemWord = pStemmer.stem(word);
-            System.out.println("PORTERSTEMMER ="+pStemmer.stem(word));
+//            System.out.println("PORTERSTEMMER ="+pStemmer.stem(word));
             if (mNonCommonStrings.containsKey(stemWord)) {
                 mNonCommonStrings.put(stemWord, mNonCommonStrings.get(stemWord) + 1);
             } else if (stemWord.chars().allMatch(Character::isAlphabetic) &&
-                    !stopWords.contains(stemWord)) {
+                    !stopWords.contains(word) && !stopWords.contains(stemWord)) { //checking if stemmed word is stop words blocks site load in browser
                 mNonCommonStrings.put(stemWord, 1);
             }
         }
@@ -67,11 +77,12 @@ public class SimpleProcessText {
      * @return - set of valid urls
      */
     public HashSet postProcessResults(){
+        Log.info("SimpleProcessText - postProcessResults");
         Iterator<String> urlsFound = mSearchURLs.iterator();
         ArrayList<String> mVals = new ArrayList<>();
         while(urlsFound.hasNext()){
             String urlString = urlsFound.next();
-            if(urlString.indexOf("http")!=0){
+            if(urlString.indexOf("http")!=-1){
                 urlsFound.remove();
 //                System.out.println("STRING = "+url + " index ="+url.indexOf("http"));
                 if(urlString.indexOf("http")!=-1) {
@@ -89,9 +100,19 @@ public class SimpleProcessText {
      */
 
     public HashMap<String, Integer>  getSortedNonCommonWords(){
+        Log.info("SimpleProcessText - getSortedNonCommonWords");
         return mNonCommonStrings.entrySet().stream()
                 .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+    }
+
+    public boolean isNonCommonWord(String word){
+        return mNonCommonStrings.containsKey(word);
+//        boolean status = false;
+//        if(mNonCommonStrings.containsKey(word)){
+//            status = true;
+//        }
+//        return status;
     }
 
 }
