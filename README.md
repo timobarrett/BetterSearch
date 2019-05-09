@@ -13,3 +13,9 @@ Apply machine learning tools to improve:
   2. better identify top sites
   3. gain experience with OpenNLP and other tools
     ** testOpenNlp.java explores tokenizer and tagger to create better summary information
+# Update
+Have been working with the OpenNLP sandox code base. https://github.com/apache/opennlp-sandbox
+Have updated the code with latest opennlp changes. Have explored
+  1. similarity code
+  2. summarizer code
+Results don't meet expectations...
