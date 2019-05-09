@@ -18,4 +18,5 @@ Have been working with the OpenNLP sandox code base. https://github.com/apache/o
 Have updated the code with latest opennlp changes. Have explored
   1. similarity code
   2. summarizer code
-Results don't meet expectations...
+  
+** Results don't meet expectations...
